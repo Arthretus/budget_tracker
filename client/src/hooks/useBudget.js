@@ -1,6 +1,6 @@
 // hooks/useBudget.js
 // Central hook — owns all budget state, derived calculations, and actions.
-// All components are purely presentational and consume this hook via BudgetTracker.jsx.
+// Components are purely presentational and receive data via BudgetTracker.jsx.
 
 import { useState, useMemo } from "react";
 import { INITIAL_PRESET_EXPENSES } from "../constants";
@@ -31,22 +31,17 @@ export function useBudget() {
   const remaining = budget - totalSpent;
   const daysLeft = daysRemaining(endDate);
 
-  // Daily allowance without factoring in expected expenses
   const dailyAllowanceRaw = daysLeft > 0 ? remaining / daysLeft : 0;
 
-  // Daily allowance after reserving for expected expenses
   const remainingAfterExpected = remaining - totalExpected;
   const dailyAllowanceAdjusted =
     daysLeft > 0 ? remainingAfterExpected / daysLeft : 0;
 
-  // Percentage of budget consumed (capped at 100)
   const pct = Math.min(100, (totalSpent / budget) * 100);
 
-  // Progress bar color — green → amber → red as budget depletes
   const statusColor =
     pct > 90 ? "#ef4444" : pct > 70 ? "#f59e0b" : "#10b981";
 
-  // Spending totals grouped by category
   const byCategory = useMemo(() => {
     const map = {};
     expenses.forEach((e) => {
@@ -63,12 +58,6 @@ export function useBudget() {
   }
 
   // ── Actual expense actions ───────────────────────────────────
-  /**
-   * Add a new expense or update an existing one.
-   * @param {object} form      - form field values
-   * @param {number|null} editingId - id of expense being edited, or null for new
-   * @param {function} onDone  - callback to reset form state after save
-   */
   function addExpense(form, editingId, onDone) {
     if (
       !form.name ||
@@ -100,10 +89,6 @@ export function useBudget() {
   }
 
   // ── Expected expense actions ─────────────────────────────────
-  /**
-   * Add a new expected expense or update an existing one.
-   * Expected expenses have no fixed date — they only affect the daily allowance.
-   */
   function addExpected(expForm, editingExpId, onDone) {
     if (
       !expForm.name ||
@@ -135,24 +120,17 @@ export function useBudget() {
   }
 
   return {
-    // Settings state
     budget, budgetInput, setBudgetInput,
     endDate, setEndDate,
     showBudgetEdit, setShowBudgetEdit,
     saveBudget,
-
-    // Data
     expenses, expectedExpenses,
     byCategory,
-
-    // Derived numbers
     totalSpent, totalExpected,
     remaining, remainingAfterExpected,
     daysLeft,
     dailyAllowanceRaw, dailyAllowanceAdjusted,
     pct, statusColor,
-
-    // Actions
     addExpense, deleteExpense,
     addExpected, deleteExpected,
   };

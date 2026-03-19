@@ -1,5 +1,5 @@
 // constants.js
-// Centralised app-wide constants — categories, colours, and seed data.
+// App-wide constants — categories, colors, and default seed data.
 
 export const CATEGORIES = [
   "Food",
@@ -23,7 +23,6 @@ export const CAT_COLORS = {
   Other:         "#6b7280",
 };
 
-// Default pre-set monthly expenses shown on first load
 export const INITIAL_PRESET_EXPENSES = [
   {
     id: 1,

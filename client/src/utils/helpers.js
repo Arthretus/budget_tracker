@@ -1,5 +1,5 @@
 // utils/helpers.js
-// Pure utility functions used across the app.
+// Pure utility functions — no side effects, no imports.
 
 /**
  * Returns today's date as a YYYY-MM-DD string.
