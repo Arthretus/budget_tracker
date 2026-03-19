@@ -1,9 +1,11 @@
 // components/AddExpenseForm.jsx
 // Form for adding a new expense or editing an existing one.
-// Handles both daily expenses and pre-set monthly expenses.
 //
-// Edit flow: BudgetTracker.jsx calls AddExpenseForm.triggerEdit(expense)
-// after switching to this tab, which pre-fills the form fields.
+// Day 8 changes:
+//   - shows inline validation error when name or amount is missing on submit
+//   - error clears as soon as the user starts typing
+//   - amount field rejects negative numbers via onKeyDown
+//   - form scrolls into view on edit trigger for better UX
 
 import { useState } from "react";
 import { CATEGORIES } from "../constants";
@@ -20,10 +22,12 @@ const EMPTY_FORM = {
 export default function AddExpenseForm({ addExpense }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null);
+  const [error, setError] = useState("");
 
-  // Static method so BudgetTracker can trigger edit mode from outside
+  // Called by BudgetTracker when user clicks ✎ on an expense row
   AddExpenseForm.triggerEdit = (expense) => {
     setEditingId(expense.id);
+    setError("");
     setForm({
       name: expense.name,
       amount: String(expense.amount),
@@ -31,9 +35,24 @@ export default function AddExpenseForm({ addExpense }) {
       date: expense.date,
       isPreset: expense.isPreset,
     });
+    // Scroll form into view smoothly
+    setTimeout(() => {
+      document.getElementById("expense-form")?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
   };
 
   function handleSubmit() {
+    // Inline validation
+    if (!form.name.trim()) {
+      setError("Please enter an expense name.");
+      return;
+    }
+    if (!form.amount || isNaN(form.amount) || Number(form.amount) <= 0) {
+      setError("Please enter a valid amount greater than 0.");
+      return;
+    }
+
+    setError("");
     addExpense(form, editingId, () => {
       setForm(EMPTY_FORM);
       setEditingId(null);
@@ -42,11 +61,16 @@ export default function AddExpenseForm({ addExpense }) {
 
   function handleCancel() {
     setEditingId(null);
+    setError("");
     setForm(EMPTY_FORM);
   }
 
+  function clearError() {
+    if (error) setError("");
+  }
+
   return (
-    <div className="card fade-in">
+    <div id="expense-form" className="card fade-in">
       <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 20 }}>
         {editingId ? "Edit Expense" : "Add Expense"}
       </div>
@@ -70,7 +94,10 @@ export default function AddExpenseForm({ addExpense }) {
             className="input"
             placeholder="e.g. Groceries"
             value={form.name}
-            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            onChange={(e) => {
+              clearError();
+              setForm((f) => ({ ...f, name: e.target.value }));
+            }}
           />
         </div>
 
@@ -91,8 +118,16 @@ export default function AddExpenseForm({ addExpense }) {
             className="input"
             type="number"
             placeholder="0"
+            min="0"
             value={form.amount}
-            onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+            onKeyDown={(e) => {
+              // Block minus sign
+              if (e.key === "-") e.preventDefault();
+            }}
+            onChange={(e) => {
+              clearError();
+              setForm((f) => ({ ...f, amount: e.target.value }));
+            }}
           />
         </div>
 
@@ -141,7 +176,7 @@ export default function AddExpenseForm({ addExpense }) {
           />
         </div>
 
-        {/* Type toggle — Daily vs Pre-set */}
+        {/* Type toggle */}
         <div style={{ gridColumn: "1 / -1" }}>
           <label
             style={{
@@ -176,6 +211,23 @@ export default function AddExpenseForm({ addExpense }) {
           </div>
         </div>
       </div>
+
+      {/* Validation error */}
+      {error && (
+        <div
+          style={{
+            marginTop: 14,
+            padding: "10px 14px",
+            background: "#1a0a0a",
+            border: "1px solid #ef444433",
+            borderRadius: 10,
+            fontSize: 13,
+            color: "#ef4444",
+          }}
+        >
+          {error}
+        </div>
+      )}
 
       {/* Actions */}
       <div style={{ display: "flex", gap: 10, marginTop: 20 }}>

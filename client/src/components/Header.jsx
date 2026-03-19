@@ -1,14 +1,17 @@
 // components/Header.jsx
 // Sticky top bar — BudgetMate logo on the left, today's date on the right.
+//
+// Day 8 changes:
+//   - accepts isOverBudget prop — shows a red alert pill when over budget
 
-export default function Header() {
+export default function Header({ isOverBudget }) {
   const today = new Date();
 
   return (
     <div
       style={{
         background: "#0d0d14",
-        borderBottom: "1px solid #1e1e2e",
+        borderBottom: `1px solid ${isOverBudget ? "#ef444433" : "#1e1e2e"}`,
         padding: "16px 24px",
         display: "flex",
         alignItems: "center",
@@ -16,6 +19,7 @@ export default function Header() {
         position: "sticky",
         top: 0,
         zIndex: 100,
+        transition: "border-color 0.3s",
       }}
     >
       {/* Logo + app name */}
@@ -37,6 +41,24 @@ export default function Header() {
         <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.5px" }}>
           BudgetMate
         </span>
+
+        {/* Over-budget alert pill */}
+        {isOverBudget && (
+          <span
+            style={{
+              background: "#ef444422",
+              color: "#ef4444",
+              border: "1px solid #ef444433",
+              borderRadius: 20,
+              padding: "2px 10px",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: 0.5,
+            }}
+          >
+            ⚠ Over Budget
+          </span>
+        )}
       </div>
 
       {/* Today's date */}

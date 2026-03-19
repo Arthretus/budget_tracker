@@ -1,6 +1,11 @@
 // components/StatsRow.jsx
 // Three stat cards in a row: Spent / Remaining / Daily Allowance.
-// Colors react to budget state (green → amber → red).
+//
+// Day 8 changes:
+//   - accepts isOverBudget prop
+//   - Remaining card gets a red tinted background when over budget
+//   - Daily Allowance card dims to grey when over budget (no valid allowance)
+//   - staggered fade-in animation delays feel more polished
 
 import { formatCur } from "../utils/helpers";
 
@@ -10,6 +15,7 @@ export default function StatsRow({
   dailyAllowanceRaw,
   daysLeft,
   pct,
+  isOverBudget,
 }) {
   const stats = [
     {
@@ -17,18 +23,27 @@ export default function StatsRow({
       value: formatCur(totalSpent),
       color: "#f97316",
       sub: `${pct.toFixed(1)}% of budget`,
+      cardStyle: {},
     },
     {
       label: "Remaining",
-      value: formatCur(Math.max(0, remaining)),
-      color: remaining < 0 ? "#ef4444" : "#10b981",
-      sub: remaining < 0 ? "Over budget!" : "Available",
+      value: isOverBudget
+        ? `-${formatCur(Math.abs(remaining))}`
+        : formatCur(remaining),
+      color: isOverBudget ? "#ef4444" : "#10b981",
+      sub: isOverBudget ? "Over budget!" : "Available",
+      cardStyle: isOverBudget
+        ? { background: "#1a0a0a", borderColor: "#3a1010" }
+        : {},
     },
     {
       label: "Daily Allowance",
-      value: formatCur(Math.max(0, dailyAllowanceRaw)),
-      color: "#6c63ff",
-      sub: `For next ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
+      value: isOverBudget ? "—" : formatCur(Math.max(0, dailyAllowanceRaw)),
+      color: isOverBudget ? "#4b5563" : "#6c63ff",
+      sub: isOverBudget
+        ? "Clear deficit first"
+        : `For next ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
+      cardStyle: {},
     },
   ];
 
@@ -45,7 +60,7 @@ export default function StatsRow({
         <div
           key={i}
           className="card fade-in"
-          style={{ animationDelay: `${i * 0.05}s` }}
+          style={{ animationDelay: `${i * 0.07}s`, ...s.cardStyle }}
         >
           <div
             style={{
@@ -59,7 +74,13 @@ export default function StatsRow({
             {s.label}
           </div>
           <div
-            style={{ fontSize: 22, fontWeight: 800, color: s.color, marginTop: 6 }}
+            style={{
+              fontSize: 22,
+              fontWeight: 800,
+              color: s.color,
+              marginTop: 6,
+              transition: "color 0.3s",
+            }}
           >
             {s.value}
           </div>

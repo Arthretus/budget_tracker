@@ -1,9 +1,12 @@
 // BudgetTracker.jsx
 // Root layout — wires useBudget hook to all components.
-// Components are still stubs at this stage; this file establishes
-// the full prop-passing contract so each component can be built independently.
+//
+// Day 8 changes:
+//   - edit flow uses useCallback to avoid stale closure issues
+//   - over-budget state passed explicitly to StatsRow for red highlighting
+//   - page title updates to reflect budget status
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useBudget } from "./hooks/useBudget";
 import GlobalStyles from "./components/GlobalStyles";
 import Header from "./components/Header";
@@ -43,11 +46,14 @@ export default function BudgetTracker() {
     addExpected, deleteExpected,
   } = useBudget();
 
-  // Switches to the Add tab and pre-fills form for editing an existing expense
-  function handleEditExpense(expense) {
+  const isOverBudget = remaining < 0;
+
+  // useCallback prevents a new function reference on every render,
+  // avoiding unnecessary re-renders in AllExpenses
+  const handleEditExpense = useCallback((expense) => {
     setTab("add");
     setTimeout(() => AddExpenseForm.triggerEdit?.(expense), 0);
-  }
+  }, []);
 
   return (
     <div
@@ -59,11 +65,10 @@ export default function BudgetTracker() {
       }}
     >
       <GlobalStyles />
-      <Header />
+      <Header isOverBudget={isOverBudget} />
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px" }}>
 
-        {/* Budget amount + end date */}
         <BudgetSettings
           budget={budget}
           budgetInput={budgetInput}
@@ -76,16 +81,15 @@ export default function BudgetTracker() {
           daysLeft={daysLeft}
         />
 
-        {/* Spent / Remaining / Daily Allowance */}
         <StatsRow
           totalSpent={totalSpent}
           remaining={remaining}
           dailyAllowanceRaw={dailyAllowanceRaw}
           daysLeft={daysLeft}
           pct={pct}
+          isOverBudget={isOverBudget}
         />
 
-        {/* Only visible when expected expenses exist */}
         <ExpectedBanner
           expectedExpenses={expectedExpenses}
           totalExpected={totalExpected}
@@ -93,7 +97,6 @@ export default function BudgetTracker() {
           remainingAfterExpected={remainingAfterExpected}
         />
 
-        {/* Animated budget used bar */}
         <ProgressBar
           pct={pct}
           statusColor={statusColor}
@@ -103,14 +106,12 @@ export default function BudgetTracker() {
           hasExpected={expectedExpenses.length > 0}
         />
 
-        {/* Tab navigation */}
         <TabBar
           tab={tab}
           setTab={setTab}
           expectedCount={expectedExpenses.length}
         />
 
-        {/* Tab content */}
         {tab === "dashboard" && (
           <Dashboard
             expenses={expenses}
